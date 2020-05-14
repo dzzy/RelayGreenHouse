@@ -37,7 +37,7 @@ try:
 
 # End program cleanly with keyboard
 except KeyboardInterrupt:
-  print ("  Quit")
+  print ("Quit")
 
   # Reset GPIO settings
   GPIO.cleanup()

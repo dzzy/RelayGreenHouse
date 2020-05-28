@@ -1,1 +1,0 @@
-def enable-GPIO(alias,state)

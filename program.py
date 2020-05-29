@@ -34,6 +34,8 @@ for i in relayPins:
     GPIO.output(i, GPIO.HIGH)
 
 time.sleep(sleepTime)
+timeString = time.strftime('%Y-%m-%d %H:%M %Z', time.localtime(time.time()))
+
 
 #initialize variables
 humidity1 = 0
@@ -46,6 +48,7 @@ loopCount = 0
 humidityState = "OFF"
 fanState = "ON"
 lightState = "OFF"
+humidifierChange = timeString
 
 #start fan
 GPIO.output(FAN, GPIO.LOW)
@@ -67,7 +70,9 @@ try:
 
           #get the current time
           timeString = time.strftime('%Y-%m-%d %H:%M %Z', time.localtime(time.time()))
-          
+
+
+
           #read the sensor values to temp a variables
           humidity1a, temperature1a = DHT.read(SENSOR, SENSOR1)
           humidity2a, temperature2a = DHT.read(SENSOR, SENSOR2)

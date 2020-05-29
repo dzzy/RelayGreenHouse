@@ -6,7 +6,7 @@ import Adafruit_DHT as DHT
 HUMIDITY_ON = 95
 HUMIDITY_OFF = 98
 sleepTime = 2
-errorResetRate = 5
+errorResetRate = 300 #seconds, 5 minutes. 
 
 #all relay pins
 relayPins = [17, 27, 22, 23]
@@ -90,14 +90,13 @@ try:
           #calculate average temperature          
           temperatureAvg = (temperature1 + temperature2) / 2
 
-          #this might not be needed
-          #account for 0 humidity values (when sensor fails) and not screw up the average, by using the value of the other sensor as the average 
-          #if humidity1 == 0:
-          #     humidityAvg = humidity2
-          #     print("Sensor 1 Down: fall back humidityAvg to humidity2")
-          #if humidity2 == 0:
-          #     humidityAvg = humidity1
-          #     print("Sensor 2 Down: fall back humidityAvg to humidity1")
+          print("Current Time:       ",timeString)
+          print("Sensor 1 Temp:       {0:0.1f}*C  Humidity={1:0.1f}%".format(temperature1, humidity1))
+          print("Sensor 2 Temp:       {0:0.1f}*C  Humidity={1:0.1f}%".format(temperature2, humidity2))
+          print("Humidity average:    {0:0.1f}%".format(humidityAvg))
+          print("Temperature average: {0:1.2f}*C".format(temperatureAvg))
+          print("Humidifier state:   ",humidityState)
+          print("Fan state:          ",fanState)
 
           if humidityAvg < HUMIDITY_ON and humidityState is not "ON": #if humidity is less than the on trigger, enable humidifier
                GPIO.output(HUMIDIFIER, GPIO.LOW)
@@ -117,14 +116,7 @@ try:
                fanState = "OFF"
                break
 
-          print("Current Time:        ",timeString)
-          print("Sensor 1: Temp=      {0:0.1f}*C  Humidity={1:0.1f}%".format(temperature1, humidity1))
-          print("Sensor 2: Temp=      {0:0.1f}*C  Humidity={1:0.1f}%".format(temperature2, humidity2))
-          print("Humidity average:    {0:0.1f}%".format(humidityAvg))
-          print("Temperature average: {0:1.2f}*C".format(temperatureAvg))
-          print("Humidifier state:    ",humidityState)
-          print("Fan state:           ",fanState)
-          print("******************************************************")
+          print("................................................................")
 
 except KeyboardInterrupt:
      # turn the relay off

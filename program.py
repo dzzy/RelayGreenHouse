@@ -67,8 +67,7 @@ try:
 
           #get the current time
           timeString = time.strftime('%Y-%m-%d %H:%M %Z', time.localtime(time.time()))
-          currentTime = datetime.strftime(datetime.utcnow(),"%H:%M:")
-
+          
           #read the sensor values to temp a variables
           humidity1a, temperature1a = DHT.read(SENSOR, SENSOR1)
           humidity2a, temperature2a = DHT.read(SENSOR, SENSOR2)

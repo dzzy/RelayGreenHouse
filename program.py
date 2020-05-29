@@ -113,15 +113,15 @@ try:
           temperatureAvg = (temperature1 + temperature2) / 2
 
           #output the status
-          print("Current Time:           ",timeString)
+          print("Current Time:          ",timeString)
           print("Sensor 1 Temp:          {0:0.1f}*C  Humidity={1:0.1f}%".format(temperature1, humidity1))
           print("Sensor 2 Temp:          {0:0.1f}*C  Humidity={1:0.1f}%".format(temperature2, humidity2))
           print("Humidity average:       {0:0.1f}%".format(humidityAvg))
           print("Temperature average:    {0:1.2f}*C".format(temperatureAvg))
-          print("Humidifier state:       ",humidityState)
-          print("Humidifier last change: ",humidifierChange)
-          print("Fan state:              ",fanState)
-          print("Light state:            ",lightState)
+          print("Humidifier state:      ",humidityState)
+          print("Humidifier last change:",humidifierChange)
+          print("Fan state:             ",fanState)
+          print("Light state:           ",lightState)
 
           if humidityAvg < HUMIDITY_ON and humidityState is not "ON": #if humidity is less than the on trigger, enable humidifier
                GPIO.output(HUMIDIFIER, GPIO.LOW)

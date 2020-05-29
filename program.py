@@ -2,42 +2,44 @@ import RPi.GPIO as GPIO
 import time
 import Adafruit_DHT as DHT
 
-#set up GPIO as BCM
-GPIO.setmode(GPIO.BCM)
-
 #config values
 HUMIDITY_ON = 95
 HUMIDITY_OFF = 98
 sleepTime = 2
+errorResetRate = 5
 
 #all relay pins
-relayPins = [27, 22, 23]
+relayPins = [17, 27, 22, 23]
 
-#named GPIO pin constants
+#relay GPIO pins
 UNUSED = 17
 HUMIDIFIER = 27
 LIGHT = 22
 FAN = 23
 
-#sensor initialization
+#sensor GPIO pins
 SENSOR = DHT.DHT22
 SENSOR1 = 9
 SENSOR2 = 10
 
-# loop through relay pins and set mode and state to 'high'
+#set up GPIO as BCM
+GPIO.setmode(GPIO.BCM)
 
-print("All Relays Off")
+# loop through relay pins and set mode and state to 'high'
+print("Program Start: All Relays Off")
 for i in relayPins:
     GPIO.setup(i, GPIO.OUT)
     GPIO.output(i, GPIO.HIGH)
 
-time.sleep(2)
+time.sleep(sleepTime)
 
 #initialize variables
 humidity1 = 0
 humidity2 = 0
 temperature1 = 0
 temperature2 = 0
+error1 = 0
+error2 = 0
 humidityState = "OFF"
 fanState = "ON"
 
@@ -48,66 +50,81 @@ print("Enabling FAN")
 try:
      while True:
 
+          #sleepyTime
           time.sleep(sleepTime)
 
-          #read the sensor values
+          #get the current time
+          timeString = time.strftime('%Y-%m-%d %H:%M %Z', time.localtime(time.time()))
+
+          #read the sensor values to temp a variables
           humidity1a, temperature1a = DHT.read(SENSOR, SENSOR1)
           humidity2a, temperature2a = DHT.read(SENSOR, SENSOR2)
 
+          if humidity1a is None or temperature1a is None: 
+               print("**** Failed to retrieve data from humidity sensor 1 ****")
+               error1 += 1
+               if error1 > errorResetRate: #if we get more than 5 sensor read errors on sensor 1
+                    humidity1 = humidity2 #store the current value of sensor 2 into humidity1 to get a more accurate average
+                    error1 = 0 #and reset the error rate
+                    print("**** Resetting sensor 1 errors to sensor 2 ****")
 
-          if humidity1a is None or temperature1a is None:
-               print("Failed to retrieve data from humidity sensor 1")
-          else:
+          else: #we got a good reading, set variables for averaging
                humidity1 = humidity1a
                temperature1 = temperature1a
 
-          if humidity2a is None or temperature2a is None:
-               print("Failed to retrieve data from humidity sensor 2")
+          if humidity2a is None or temperature2a is None: 
+               print("**** Failed to retrieve data from humidity sensor 2 ****")
+               error2 += 1
+               if error2 > errorResetRate: #if we get more than 5 sensor read errors on sensor 2
+                    humidity2 = humidity1 #store the current value of sensor 1 into humidity2 to get a more accurate average
+                    error2 = 0 #and reset the error rate
+                    print("**** Resetting sensor 1 errors to sensor 2 ****")
           else:
+               #otherwise, we got a good reading and store it into the humidity2 variable
                humidity2 = humidity2a
                temperature2 = temperature2a
 
-          if humidity1 is not None and temperature1 is not None:
-               print("Sensor 1: Temp={0:0.1f}*C  Humidity={1:0.1f}%".format(temperature1, humidity1))
-          if humidity2 is not None and temperature2 is not None:
-               print("Sensor 2: Temp={0:0.1f}*C  Humidity={1:0.1f}%".format(temperature2, humidity2))
-
+          #calculate average humidity
           humidityAvg = (humidity1 + humidity2) / 2
 
-          if humidity1 == 0:
-               humidityAvg = humidity2
-               print("Sensor 1 Down: Setting humidityavg to humidity2")
-          if humidity2 == 0:
-               humidityAvg = humidity1
-               print("Sensor 2 Down: Setting humidityavg to humidity1")
-          
+          #calculate average temperature          
           temperatureAvg = (temperature1 + temperature2) / 2
-          print("Humidity average: {0:0.1f}%".format(humidityAvg))
-          print("Temperature average: ",temperatureAvg)
 
-          if humidity1 is not 0 and humidity2 is not 0:
-               if humidityAvg < HUMIDITY_ON:
-                    if humidityState is not "ON":
-                         GPIO.output(HUMIDIFIER, GPIO.LOW)
-                         print("Enabling Humidifier")
-                         humidityState = "ON"
+          #this might not be needed
+          #account for 0 humidity values (when sensor fails) and not screw up the average, by using the value of the other sensor as the average 
+          #if humidity1 == 0:
+          #     humidityAvg = humidity2
+          #     print("Sensor 1 Down: fall back humidityAvg to humidity2")
+          #if humidity2 == 0:
+          #     humidityAvg = humidity1
+          #     print("Sensor 2 Down: fall back humidityAvg to humidity1")
 
-               if humidityAvg > HUMIDITY_OFF:
-                    if humidityState is not "OFF":
-                         GPIO.output(HUMIDIFIER, GPIO.HIGH)
-                         print("Disabling Humidifier")
-                         humidityState = "OFF"
+          if humidityAvg < HUMIDITY_ON and humidityState is not "ON": #if humidity is less than the on trigger, enable humidifier
+               GPIO.output(HUMIDIFIER, GPIO.LOW)
+               print("**** Enabling Humidifier ****")
+               humidityState = "ON"
 
-          else:
-               print("****** Sensor failure, powering down *******")
+          if humidityAvg > HUMIDITY_OFF and humidityState is not "OFF": #if humidity is more than the cutoff, turn off. 
+               GPIO.output(HUMIDIFIER, GPIO.HIGH)
+               print("**** Disabling Humidifier ****")
+               humidityState = "OFF"
+
+          if humidity1 == 0 and humidity2 == 0: #both sensors are 0. turn off and exit. 
+               print("**** Sensor failure, powering down ****")
                GPIO.output(HUMIDIFIER, GPIO.HIGH)
                GPIO.output(FAN, GPIO.HIGH)
                humidityState = "OFF"
                fanState = "OFF"
-
-          print("Humidifier state: ",humidityState)
-          print("Fan state: ",fanState)
-          print("**********************************************")
+               break
+               
+          print(time)
+          print("Sensor 1: Temp=      {0:0.1f}*C  Humidity={1:0.1f}%".format(temperature1, humidity1))
+          print("Sensor 2: Temp=      {0:0.1f}*C  Humidity={1:0.1f}%".format(temperature2, humidity2))
+          print("Humidity average:    {0:0.1f}%".format(humidityAvg))
+          print("Temperature average: {0:1.2f}*C".format(temperatureAvg))
+          print("Humidifier state:    ",humidityState)
+          print("Fan state:           ",fanState)
+          print("******************************************************")
 
 except KeyboardInterrupt:
      # turn the relay off

@@ -116,8 +116,8 @@ try:
                humidityState = "OFF"
                fanState = "OFF"
                break
-               
-          print(time)
+
+          print("Current Time:        ",timeString)
           print("Sensor 1: Temp=      {0:0.1f}*C  Humidity={1:0.1f}%".format(temperature1, humidity1))
           print("Sensor 2: Temp=      {0:0.1f}*C  Humidity={1:0.1f}%".format(temperature2, humidity2))
           print("Humidity average:    {0:0.1f}%".format(humidityAvg))

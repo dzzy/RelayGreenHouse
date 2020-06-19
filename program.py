@@ -39,7 +39,7 @@ for i in RELAYPINS:
 
 print("Program Start: Setting pullup on sensors")
 for i in SENSORPINS:
-    GPIO.setup(i, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+    GPIO.setup(i, GPIO.IN)
 
 time.sleep(SLEEPTIME)
 timeString = time.strftime('%Y-%m-%d %H:%M %Z', time.localtime(time.time()))

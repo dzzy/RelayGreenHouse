@@ -37,7 +37,7 @@ for i in RELAYPINS:
     GPIO.setup(i, GPIO.OUT)
     GPIO.output(i, GPIO.HIGH)
 
-print("Program Start: Setting pullup on sensors")
+print("Program Start: Setting up sensors")
 for i in SENSORPINS:
     GPIO.setup(i, GPIO.IN)
 
@@ -157,6 +157,8 @@ except KeyboardInterrupt:
      for i in relayPins:
           GPIO.setmode(GPIO.BCM)
           GPIO.output(i, GPIO.HIGH)
+          GPIO.cleanup()
+     for i in sensorPins:
           GPIO.cleanup()
 
      # Reset GPIO settings
